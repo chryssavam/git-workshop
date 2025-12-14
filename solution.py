@@ -6,10 +6,14 @@ Problem: Given servers with security grades, group them such that:
 - Servers in same group have same security grade
 - All groups have sizes differing by at most 1
 - Minimize total number of groups
+
+Time Complexity: O(n) where n is length of security array
+Space Complexity: O(k) where k is number of unique security grades
 """
 
 from collections import Counter
 import math
+import sys
 
 
 def findMinimumGroups(security):
@@ -21,15 +25,14 @@ def findMinimumGroups(security):
 
     Returns:
         Minimum number of groups required
-
-    Time Complexity: O(n) where n is length of security array
-    Space Complexity: O(k) where k is number of unique security grades
     """
+    if not security:
+        return 0
+
     # Count frequency of each security grade
     freq_map = Counter(security)
     frequencies = list(freq_map.values())
 
-    # Edge case: empty array
     if not frequencies:
         return 0
 
@@ -44,7 +47,31 @@ def findMinimumGroups(security):
     return total_groups
 
 
-def main():
+def main_with_stdin():
+    """Version for online judge with STDIN input"""
+    lines = sys.stdin.read().strip().split('\n')
+
+    if not lines or not lines[0]:
+        print(0)
+        return
+
+    n = int(lines[0])
+
+    if n == 0:
+        print(0)
+        return
+
+    security = []
+    for i in range(1, n + 1):
+        if i < len(lines):
+            security.append(int(lines[i]))
+
+    result = findMinimumGroups(security)
+    print(result)
+
+
+def main_test():
+    """Version for local testing"""
     # Test case 1 from problem description
     security1 = [2, 3, 3, 3, 2, 1]
     result1 = findMinimumGroups(security1)
@@ -72,6 +99,24 @@ def main():
     print(f"Result: {result4}")
     print(f"Expected: 5 (all different grades)\n")
 
+    # Edge cases
+    security5 = [1]
+    result5 = findMinimumGroups(security5)
+    print(f"Test 5: security = {security5}")
+    print(f"Result: {result5}")
+    print(f"Expected: 1\n")
+
+    security6 = [1, 1, 2]
+    result6 = findMinimumGroups(security6)
+    print(f"Test 6: security = {security6}")
+    print(f"Result: {result6}\n")
+
 
 if __name__ == "__main__":
-    main()
+    # Uncomment the version you need:
+
+    # For online judge (reads from STDIN):
+    # main_with_stdin()
+
+    # For local testing:
+    main_test()

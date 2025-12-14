@@ -4,7 +4,7 @@
 
 Given `n` servers with security grades `security[i]`, group them to minimize the number of groups where:
 - Servers in the same group must have the same security grade
-- All group sizes must differ by at most 1
+- All group sizes must differ by at most 1 (i.e., all groups are size `m` or `m+1` for some minimum size `m`)
 
 ## Algorithm Explanation
 
@@ -74,3 +74,40 @@ Add up groups needed for all security grades.
 The problem is essentially asking: "What's the optimal way to partition frequencies into groups such that all groups are size `m` or `m+1`?"
 
 The answer: Make `m` as large as possible (= minimum frequency), then greedily use size `(m+1)` groups.
+
+## Input/Output Format
+
+For online judge submissions:
+
+**Input:**
+```
+Line 1: n (number of servers)
+Lines 2 to n+1: security grade of each server (one per line)
+```
+
+**Output:**
+```
+Single integer: minimum number of groups
+```
+
+**Example:**
+```
+Input:
+5
+1
+7
+7
+7
+1
+
+Output:
+2
+```
+
+## Implementation Notes
+
+The solution provides two versions:
+1. **main_with_stdin()** - For online judge platforms that read from STDIN
+2. **main_test()** - For local testing with predefined test cases
+
+Switch between them by uncommenting the appropriate function call in the `if __name__ == "__main__"` block.
