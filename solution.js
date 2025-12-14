@@ -15,63 +15,68 @@
  */
 
 function secureMaximumDeliveries(deliveryLogs, k) {
-    // Key constraint: Each warehouse stores deliveries from ONE log only
-    // Strategy: Use a min-heap approach, adding each log to smallest warehouse
-    // If we have fewer logs than warehouses, split the largest logs
+    // Key constraint: Each warehouse stores from ONE log only
+    // A log CAN be split across multiple warehouses
+    //
+    // Greedy approach: Repeatedly split the largest warehouse value
+    // until we have k warehouses, which balances the load
 
+    const logs = [...deliveryLogs].sort((a, b) => b - a);
+
+    // Start with each log in one warehouse (up to min(n, k) logs)
     const warehouses = [];
-
-    for (const log of deliveryLogs) {
-        if (warehouses.length < k) {
-            // We have available warehouse slots
-            warehouses.push(log);
-        } else {
-            // All k warehouses occupied, add to smallest
-            warehouses.sort((a, b) => a - b);
-            warehouses[0] += log;
-        }
+    for (let i = 0; i < Math.min(logs.length, k); i++) {
+        warehouses.push(logs[i]);
     }
 
-    // If we have fewer logs than k warehouses, split largest logs to balance
+    // If we have fewer warehouses than k, keep splitting the largest
     while (warehouses.length < k) {
-        warehouses.sort((a, b) => b - a); // Sort descending
-        const largest = warehouses[0];
-
-        if (largest > 0) {
-            // Split the largest warehouse
-            warehouses[0] = Math.floor(largest / 2);
-            warehouses.push(Math.ceil(largest / 2));
-        } else {
-            // All zeros, just add a zero
-            warehouses.push(0);
+        // Find the largest warehouse value
+        let maxIdx = 0;
+        for (let i = 1; i < warehouses.length; i++) {
+            if (warehouses[i] > warehouses[maxIdx]) {
+                maxIdx = i;
+            }
         }
+
+        // Split it in half
+        const val = warehouses[maxIdx];
+        warehouses[maxIdx] = val / 2;
+        warehouses.push(val / 2);
     }
 
-    // Sort and sum the k/2 smallest (safe) warehouses
+    // Sort and sum the k/2 smallest warehouses
     warehouses.sort((a, b) => a - b);
 
-    let secureDeliveries = 0;
+    let sum = 0;
     for (let i = 0; i < k / 2; i++) {
-        secureDeliveries += warehouses[i];
+        sum += warehouses[i];
     }
 
-    return secureDeliveries;
+    return sum;
 }
 
 // Test cases
-console.log("Test Case 1:");
-console.log("Input: deliveryLogs = [3, 6, 9, 6], k = 4");
-console.log("Output:", secureMaximumDeliveries([3, 6, 9, 6], 4));
-console.log("Expected: 9\n");
+const testCases = [
+    { input: [[3, 6, 9, 6], 4], expected: 9, name: "Example 1" },
+    { input: [[6], 2], expected: 3, name: "Example 2" },
+    { input: [[10, 10, 10, 10], 4], expected: 20, name: "Equal logs" },
+    { input: [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 4], expected: null, name: "More logs than warehouses" },
+    { input: [[100], 4], expected: null, name: "Single large log, multiple warehouses" },
+    { input: [[1, 2, 3, 4, 5], 4], expected: null, name: "More logs than k" },
+    { input: [[5, 5, 5, 5], 6], expected: null, name: "More warehouses than logs" },
+];
 
-console.log("Test Case 2:");
-console.log("Input: deliveryLogs = [6], k = 2");
-console.log("Output:", secureMaximumDeliveries([6], 2));
-console.log("Expected: 3\n");
-
-console.log("Test Case 3:");
-console.log("Input: deliveryLogs = [10, 10, 10, 10], k = 4");
-console.log("Output:", secureMaximumDeliveries([10, 10, 10, 10], 4));
-console.log("Expected: 20\n");
+testCases.forEach((tc, idx) => {
+    const result = secureMaximumDeliveries(...tc.input);
+    console.log(`Test ${idx + 1}: ${tc.name}`);
+    console.log(`  Input: deliveryLogs = [${tc.input[0]}], k = ${tc.input[1]}`);
+    console.log(`  Output: ${result}`);
+    if (tc.expected !== null) {
+        console.log(`  Expected: ${tc.expected}`);
+        console.log(`  Status: ${result === tc.expected ? '✓ PASS' : '✗ FAIL'}`);
+    }
+    console.log();
+});
 
 module.exports = { secureMaximumDeliveries };

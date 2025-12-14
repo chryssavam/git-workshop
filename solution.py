@@ -25,40 +25,32 @@ def secureMaximumDeliveries(deliveryLogs, k):
     Returns:
         int - maximum number of secure deliveries
     """
-    # Key constraint: Each warehouse stores deliveries from ONE log only
-    # Strategy: Use a min-heap approach, adding each log to smallest warehouse
-    # If we have fewer logs than warehouses, split the largest logs
+    # Key constraint: Each warehouse stores from ONE log only
+    # A log CAN be split across multiple warehouses
+    # Greedy approach: Repeatedly split the largest warehouse value
+    # until we have k warehouses, which balances the load
 
-    warehouses = []
+    logs = sorted(deliveryLogs, reverse=True)
 
-    for log in deliveryLogs:
-        if len(warehouses) < k:
-            # We have available warehouse slots
-            warehouses.append(log)
-        else:
-            # All k warehouses occupied, add to smallest
-            warehouses.sort()
-            warehouses[0] += log
+    # Start with each log in one warehouse (up to min(n, k) logs)
+    warehouses = logs[:min(len(logs), k)]
 
-    # If we have fewer logs than k warehouses, split largest logs to balance
+    # If we have fewer warehouses than k, keep splitting the largest
     while len(warehouses) < k:
-        warehouses.sort(reverse=True)  # Sort descending
-        largest = warehouses[0]
+        # Find the largest warehouse value
+        max_idx = warehouses.index(max(warehouses))
 
-        if largest > 0:
-            # Split the largest warehouse
-            warehouses[0] = largest // 2
-            warehouses.append(largest - largest // 2)
-        else:
-            # All zeros, just add a zero
-            warehouses.append(0)
+        # Split it in half
+        val = warehouses[max_idx]
+        warehouses[max_idx] = val / 2
+        warehouses.append(val / 2)
 
-    # Sort and sum the k/2 smallest (safe) warehouses
+    # Sort and sum the k/2 smallest warehouses
     warehouses.sort()
 
     secure_deliveries = sum(warehouses[:k // 2])
 
-    return secure_deliveries
+    return int(secure_deliveries)
 
 
 if __name__ == "__main__":
