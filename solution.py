@@ -20,6 +20,12 @@ def findMinimumGroups(security):
     """
     Find minimum number of security groups needed.
 
+    All groups must have sizes differing by at most 1, meaning all groups
+    are size m or m+1 for some minimum group size m.
+
+    Strategy: Try all possible values of m and find the largest m where
+    all frequencies can be validly partitioned.
+
     Args:
         security: List of integers representing security grades
 
@@ -36,15 +42,33 @@ def findMinimumGroups(security):
     if not frequencies:
         return 0
 
-    # The minimum frequency determines the maximum possible minimum group size
-    # All groups must be size m or m+1, so m <= min(frequencies)
-    min_freq = min(frequencies)
+    # Try all possible minimum group sizes from largest to smallest
+    # Larger m generally means fewer total groups
+    max_freq = max(frequencies)
 
-    # For each frequency f, partition into groups of size min_freq or min_freq+1
-    # Minimum groups needed for frequency f is ceil(f / (min_freq + 1))
-    total_groups = sum(math.ceil(f / (min_freq + 1)) for f in frequencies)
+    for m in range(max_freq, 0, -1):
+        valid = True
+        total_groups = 0
 
-    return total_groups
+        for f in frequencies:
+            # Minimum number of groups needed to partition f into groups of size m or m+1
+            k = math.ceil(f / (m + 1))
+
+            # Verify this partition is actually valid
+            # We need: k * m <= f <= k * (m + 1)
+            if k * m > f:
+                # Can't partition this frequency with this m
+                valid = False
+                break
+
+            total_groups += k
+
+        if valid:
+            # Found the largest valid m - return total groups
+            return total_groups
+
+    # Fallback (should not reach here)
+    return len(security)
 
 
 def main_with_stdin():

@@ -16,55 +16,84 @@ Example: `[2, 3, 3, 3, 2, 1]`
 - Grade 2: 2 servers
 - Grade 3: 3 servers
 
-### Step 2: Find Minimum Frequency
-The minimum frequency across all security grades determines the maximum possible minimum group size.
+### Step 2: Try All Possible Minimum Group Sizes (m)
+For each possible value of `m` (from largest to smallest), check if ALL frequencies can be validly partitioned into groups of size `m` or `m+1`.
 
-If `min_freq = 1`, all groups must be size 1 or 2.
-If `min_freq = 2`, all groups must be size 2 or 3.
+**Key constraint:** For frequency `f` with `k` groups of size `m` or `m+1`, we need:
+- `k * m <= f <= k * (m+1)`
 
-**Why?** If we have a security grade with only 1 server, we can't make a group larger than 1 from it. So the smallest group will be size 1, meaning all groups must be size 1 or 2.
+This ensures we can actually distribute `f` servers across `k` groups where each group is size `m` or `m+1`.
 
-### Step 3: Calculate Groups Needed
-For each security grade with frequency `f`, we partition it into groups of size `m` or `m+1` (where `m = min_freq`).
+### Step 3: Validate and Calculate
+For a given `m`:
+1. For each frequency `f`, calculate minimum groups needed: `k = ceil(f / (m+1))`
+2. **Verify validity:** Check if `k * m <= f` (the left side of our constraint)
+3. If ANY frequency fails validation, try smaller `m`
+4. If ALL frequencies pass, this `m` is valid - calculate total groups
 
-To minimize groups, use as many size `(m+1)` groups as possible:
-- Groups needed = `ceil(f / (m+1))`
+### Step 4: Return First Valid Solution
+The largest valid `m` gives us the minimum total number of groups.
 
-### Step 4: Sum Total Groups
-Add up groups needed for all security grades.
+**Why try from largest to smallest?** Larger `m` generally means fewer total groups, so we want the largest valid `m`.
 
 ## Example Walkthrough
 
 ### Example 1: `[2, 3, 3, 3, 2, 1]`
 
-**Frequencies:** {1→1, 2→2, 3→3}
-**Min frequency:** 1
-**Group sizes:** 1 or 2
+**Frequencies:** [1, 2, 3]
 
-**Partitioning:**
-- Grade 1 (1 server): ceil(1/2) = 1 group of size 1
-- Grade 2 (2 servers): ceil(2/2) = 1 group of size 2
-- Grade 3 (3 servers): ceil(3/2) = 2 groups (one size 2, one size 1)
+**Try m=3:**
+- f=1: k=ceil(1/4)=1, check: 1*3=3 ≤ 1? NO! ✗ Invalid
 
-**Total:** 4 groups with sizes [1, 2, 2, 1] ✓
+**Try m=2:**
+- f=1: k=ceil(1/3)=1, check: 1*2=2 ≤ 1? NO! ✗ Invalid
+
+**Try m=1:**
+- f=1: k=ceil(1/2)=1, check: 1*1=1 ≤ 1? YES ✓
+- f=2: k=ceil(2/2)=1, check: 1*1=1 ≤ 2? YES ✓
+- f=3: k=ceil(3/2)=2, check: 2*1=2 ≤ 3? YES ✓
+- Total: 1+1+2 = **4 groups** ✓
+
+**Actual partition:** Groups of size 1 or 2: [1, 2, 2, 1]
 
 ### Example 2: `[1, 7, 7, 7, 1]`
 
-**Frequencies:** {1→2, 7→3}
-**Min frequency:** 2
-**Group sizes:** 2 or 3
+**Frequencies:** [2, 3]
 
-**Partitioning:**
-- Grade 1 (2 servers): ceil(2/3) = 1 group of size 2
-- Grade 7 (3 servers): ceil(3/3) = 1 group of size 3
+**Try m=3:**
+- f=2: k=ceil(2/4)=1, check: 1*3=3 ≤ 2? NO! ✗ Invalid
 
-**Total:** 2 groups with sizes [2, 3] ✓
+**Try m=2:**
+- f=2: k=ceil(2/3)=1, check: 1*2=2 ≤ 2? YES ✓
+- f=3: k=ceil(3/3)=1, check: 1*2=2 ≤ 3? YES ✓
+- Total: 1+1 = **2 groups** ✓
+
+**Actual partition:** Groups of size 2 or 3: [2, 3]
+
+### Example 3 (Bug Case): `[1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2]`
+
+**Frequencies:** [5, 7]
+
+**Try m=7:**
+- f=5: k=ceil(5/8)=1, check: 1*7=7 ≤ 5? NO! ✗ Invalid
+
+**Try m=5, m=4, m=3:** All invalid (similar to above)
+
+**Try m=2:**
+- f=5: k=ceil(5/3)=2, check: 2*2=4 ≤ 5? YES ✓
+- f=7: k=ceil(7/3)=3, check: 3*2=6 ≤ 7? YES ✓
+- Total: 2+3 = **5 groups** ✓
+
+**Actual partition:** Groups of size 2 or 3: [2, 3, 2, 3, 3] or similar
 
 ## Complexity Analysis
 
-- **Time Complexity:** O(n) where n = length of security array
+- **Time Complexity:** O(n * max_freq) where n = length of security array
   - O(n) to count frequencies
-  - O(k) to calculate groups where k = unique security grades
+  - O(max_freq) to try different values of m
+  - For each m, O(k) to validate all frequencies where k = unique security grades
+  - Overall: O(n + max_freq * k), which is O(n * max_freq) in worst case
+  - In practice, this is still very efficient as max_freq ≤ n
 
 - **Space Complexity:** O(k) where k = unique security grades
   - HashMap to store frequencies
