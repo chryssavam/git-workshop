@@ -1,28 +1,30 @@
-class Solution:
-    def minSum(self, nums1: list[int], nums2: list[int]) -> int:
-        sum1 = sum(nums1)
-        sum2 = sum(nums2)
-        zeros1 = nums1.count(0)
-        zeros2 = nums2.count(0)
+def teamSize(talent, talentsCount):
+    n = len(talent)
+    result = []
+    freq = {}
+    have = 0  # distinct talents 1..talentsCount in current window
+    end = 0
 
-        # Minimum possible sum for each array: current sum + number of zeros
-        # (each zero must be replaced with at least 1)
-        min_sum1 = sum1 + zeros1
-        min_sum2 = sum2 + zeros2
+    for start in range(n):
+        # Expand right until the window contains all talents
+        while end < n and have < talentsCount:
+            t = talent[end]
+            if 1 <= t <= talentsCount:
+                freq[t] = freq.get(t, 0) + 1
+                if freq[t] == 1:
+                    have += 1
+            end += 1
 
-        # If min_sum1 < min_sum2, we need to increase sum1.
-        # We can only increase sum1 if it has zeros (replace them with larger values).
-        # If nums1 has no zeros, we can't increase its sum, so it's impossible.
-        if min_sum1 < min_sum2:
-            if zeros1 == 0:
-                return -1
-            return min_sum2
+        if have == talentsCount:
+            result.append(end - start)
+        else:
+            result.append(-1)
 
-        # Symmetric case
-        if min_sum2 < min_sum1:
-            if zeros2 == 0:
-                return -1
-            return min_sum1
+        # Shrink window from the left
+        t = talent[start]
+        if 1 <= t <= talentsCount:
+            freq[t] -= 1
+            if freq[t] == 0:
+                have -= 1
 
-        # min_sum1 == min_sum2
-        return min_sum1
+    return result
