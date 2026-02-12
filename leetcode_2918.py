@@ -17,7 +17,10 @@ def showsInProduction(startYear, endYear):
         total_pages = data["total_pages"]
 
         for show in data["data"]:
-            match = YEAR_RE.search(show["runtime_of_series"])
+            runtime = show.get("runtime_of_series")
+            if not runtime:
+                continue
+            match = YEAR_RE.search(runtime)
             if not match:
                 continue
 
