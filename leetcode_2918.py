@@ -17,25 +17,23 @@ def showsInProduction(startYear, endYear):
         for show in data["data"]:
             runtime = show["runtime_of_series"]
 
-            # Remove (I) or (II) prefix if present
-            runtime = re.sub(r'\(I{1,2}\)\s*', '', runtime).strip()
+            # Search for the year pattern directly, skipping any (I)/(II) prefix
+            # Matches: (2020-2021), (2020-), (2020)
+            match = re.search(r'\((\d{4})(\s*-\s*(\d{4})?)?\s*\)', runtime)
+            if not match:
+                continue
 
-            # Strip outer parentheses
-            runtime = runtime.strip('()')
+            show_start = int(match.group(1))
 
-            if '-' in runtime:
-                parts = runtime.split('-')
-                show_start = int(parts[0].strip())
-                end_part = parts[1].strip()
-                if end_part == '':
-                    # Still in production, e.g. "(2020-)"
-                    show_end = None
-                else:
-                    show_end = int(end_part)
-            else:
-                # Single year, e.g. "(2020)"
-                show_start = int(runtime.strip())
+            if match.group(2) is None:
+                # Single year format: (2020)
                 show_end = show_start
+            elif match.group(3) is None:
+                # Still in production: (2020-)
+                show_end = None
+            else:
+                # Range: (2020-2021)
+                show_end = int(match.group(3))
 
             # Filter: started in startYear or later
             if show_start < startYear:
