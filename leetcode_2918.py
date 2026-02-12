@@ -1,24 +1,21 @@
 import re
-from concurrent.futures import ThreadPoolExecutor
 import requests
 
-BASE_URL = "https://jsonmock.hackerrank.com/api/tvseries?page="
 YEAR_RE = re.compile(r'\((\d{4})(\s*-\s*(\d{4})?)?\s*\)')
 
 
-def _fetch(page):
-    return requests.get(f"{BASE_URL}{page}").json()
-
-
 def showsInProduction(startYear, endYear):
-    first = _fetch(1)
-    total_pages = first["total_pages"]
-
-    with ThreadPoolExecutor(max_workers=total_pages) as pool:
-        pages = [first] + list(pool.map(_fetch, range(2, total_pages + 1)))
-
+    session = requests.Session()
     result = []
-    for data in pages:
+    page = 1
+    total_pages = 1
+
+    while page <= total_pages:
+        data = session.get(
+            f"https://jsonmock.hackerrank.com/api/tvseries?page={page}"
+        ).json()
+        total_pages = data["total_pages"]
+
         for show in data["data"]:
             match = YEAR_RE.search(show["runtime_of_series"])
             if not match:
@@ -41,6 +38,8 @@ def showsInProduction(startYear, endYear):
             else:
                 if show_end is not None and show_end <= endYear:
                     result.append(show["name"])
+
+        page += 1
 
     result.sort()
     return result
