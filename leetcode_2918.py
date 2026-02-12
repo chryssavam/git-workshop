@@ -1,3 +1,4 @@
+import re
 import requests
 
 
@@ -15,22 +16,41 @@ def showsInProduction(startYear, endYear):
 
         for show in data["data"]:
             runtime = show["runtime_of_series"]
-            # Format: "(2011-2019)" or "(2011- )"
-            runtime = runtime.strip("()")
-            parts = runtime.split("-")
 
-            show_start = int(parts[0].strip())
+            # Remove (I) or (II) prefix if present
+            runtime = re.sub(r'\(I{1,2}\)\s*', '', runtime).strip()
 
-            end_part = parts[1].strip()
-            if end_part == "" or end_part == " ":
-                show_end = float("inf")
+            # Strip outer parentheses
+            runtime = runtime.strip('()')
+
+            if '-' in runtime:
+                parts = runtime.split('-')
+                show_start = int(parts[0].strip())
+                end_part = parts[1].strip()
+                if end_part == '':
+                    # Still in production, e.g. "(2020-)"
+                    show_end = None
+                else:
+                    show_end = int(end_part)
             else:
-                show_end = int(end_part)
+                # Single year, e.g. "(2020)"
+                show_start = int(runtime.strip())
+                show_end = show_start
 
-            # Overlap: show was in production during [startYear, endYear]
-            if show_start <= endYear and show_end >= startYear:
-                result.append(show["name"])
+            # Filter: started in startYear or later
+            if show_start < startYear:
+                continue
+
+            if endYear == -1:
+                # Only want shows still in production
+                if show_end is None:
+                    result.append(show["name"])
+            else:
+                # Must have ended and ended in endYear or earlier
+                if show_end is not None and show_end <= endYear:
+                    result.append(show["name"])
 
         page += 1
 
+    result.sort()
     return result
